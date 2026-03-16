@@ -89,16 +89,15 @@ def create_vector_tab(notebook):
         A, B = get_vectors()
         if A and B:
             result = dot_product(A, B)
-            label_result.config(text=f"Dot Product: {result}")
+            vector_label.config(text=f"Dot Product: {result}")
 
     def calculate_cross():
        A, B = get_vectors()
        if A and B:
         try:
             result = cross_product(A, B)
-            label_result.config(
-                text="Cross Product:\n" + "\n".join(str(x) for x in result)
-            )
+            vector_label.config(text="\n".join(f"{x:7.1f}" for x in result))
+
         except ValueError as e:
             messagebox.showerror("Error", str(e))
 
@@ -109,7 +108,52 @@ def create_vector_tab(notebook):
     ttk.Button(btn_frame, text="Dot Product", command=calculate_dot).grid(row=0, column=0, padx=10)
     ttk.Button(btn_frame, text="Cross Product", command=calculate_cross).grid(row=0, column=1, padx=10)
 
-    label_result = ttk.Label(tab, text="Result will appear here.", font=("Segoe UI", 13, "bold"))
-    label_result.pack(pady=20)
+   # --- Canvas-drawn brackets + result label ---
+    bracket_frame = ttk.Frame(tab)
+    bracket_frame.pack(pady=20)
 
+    CANVAS_W, CANVAS_H = 20, 80   # bracket canvas size
+    SERIF = 6                      # horizontal foot length
+    FG = "#000000"
+
+    left_canvas = tk.Canvas(bracket_frame, width=CANVAS_W, height=CANVAS_H,
+                            highlightthickness=0, bg="#d9d9d9")
+    left_canvas.grid(row=0, column=0, sticky="ns")
+
+    right_canvas = tk.Canvas(bracket_frame, width=CANVAS_W, height=CANVAS_H,
+                             highlightthickness=0, bg="#d9d9d9")
+    right_canvas.grid(row=0, column=2, sticky="ns")
+
+    def draw_brackets():
+        """Redraw both brackets to match the current canvas height."""
+        for canvas, facing in [(left_canvas, "right"), (right_canvas, "left")]:
+            canvas.delete("all")
+            w = int(canvas["width"])
+            h = int(canvas["height"])
+            x_line = w - 4 if facing == "left" else 4
+            x_foot = 4      if facing == "left" else w - 4
+
+            # Vertical bar
+            canvas.create_line(x_line, 4, x_line, h - 4, width=2, fill=FG)
+            # Top foot
+            canvas.create_line(x_line, 4, x_foot, 4, width=2, fill=FG)
+            # Bottom foot
+            canvas.create_line(x_line, h - 4, x_foot, h - 4, width=2, fill=FG)
+
+    draw_brackets()
+
+    vector_label = ttk.Label(bracket_frame, text="Result will\nappear here.",
+                             font=("Courier New", 13, "bold"), justify="center")
+    vector_label.grid(row=0, column=1, padx=6, sticky="ns")
+
+    def sync_bracket_height(event=None):
+        """Resize canvases to match the label height after geometry settles."""
+        bracket_frame.update_idletasks()
+        h = max(vector_label.winfo_height(), 60)
+        for canvas in (left_canvas, right_canvas):
+            canvas.config(height=h)
+        draw_brackets()
+
+    vector_label.bind("<Configure>", sync_bracket_height)
+    
     return tab

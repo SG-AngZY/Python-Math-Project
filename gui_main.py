@@ -2,6 +2,7 @@
 import tkinter as tk
 from tkinter import ttk
 from tabs.vector_tab import create_vector_tab # Import the separate interface
+from tabs.matrix_tab import create_matrix_tab
 
 root = tk.Tk()
 root.title("Universal Math App")
@@ -28,13 +29,13 @@ ttk.Label(tab_home, text="Choose a math module from the tabs above.", font=("Seg
 # Vector tab (imported)
 create_vector_tab(notebook)
 
-# Other placeholder tabs
-for name, msg in [
-    ("Matrices", "Matrix operations coming soon!"),
-    ("Statistics", "Statistics tools coming soon!"),
-]:
-    tab = ttk.Frame(notebook, padding=20)
-    notebook.add(tab, text=name)
-    ttk.Label(tab, text=msg, font=("Segoe UI", 14, "italic")).pack(pady=20)
+# Matrix tab
+matrix_tab_frame = create_matrix_tab(notebook)
+notebook.add(matrix_tab_frame, text="Matrices")
+
+# Statistics placeholder (if you want to keep it)
+stats_tab = ttk.Frame(notebook, padding=20)
+notebook.add(stats_tab, text="Statistics")
+ttk.Label(stats_tab, text="Statistics tools coming soon!", font=("Segoe UI", 14, "italic")).pack(pady=20)
 
 root.mainloop()
