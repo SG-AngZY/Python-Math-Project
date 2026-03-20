@@ -1,12 +1,16 @@
 # gui.py
+import sys # Add this at the top of gui.py
+import matplotlib.pyplot as plt # Add this at the top of gui.py
 import tkinter as tk
 from tkinter import ttk
 from tabs.vector_tab import create_vector_tab # Import the separate interface
 from tabs.matrix_tab import create_matrix_tab
+from tabs.distribution_tab import create_distribution_tab
 
 root = tk.Tk()
 root.title("Universal Math App")
-root.geometry("700x500")
+root.geometry("1000x700")
+root.minsize(600, 500)
 
 # --- Global Styles ---
 style = ttk.Style()
@@ -34,8 +38,21 @@ matrix_tab_frame = create_matrix_tab(notebook)
 notebook.add(matrix_tab_frame, text="Matrices")
 
 # Statistics placeholder (if you want to keep it)
-stats_tab = ttk.Frame(notebook, padding=20)
-notebook.add(stats_tab, text="Statistics")
-ttk.Label(stats_tab, text="Statistics tools coming soon!", font=("Segoe UI", 14, "italic")).pack(pady=20)
+distribution_tab_frame = create_distribution_tab(notebook)
+notebook.add(distribution_tab_frame, text="Distribution")
+
+# In your main file where 'root' is created:
+def on_closing():
+    # 1. Close all matplotlib figures to free up memory
+    plt.close('all')
+    
+    # 2. Destroy the Tkinter window
+    root.destroy()
+    
+    # 3. Force the Python process to exit immediately
+    sys.exit()
+
+root.protocol("WM_DELETE_WINDOW", on_closing)
 
 root.mainloop()
+
