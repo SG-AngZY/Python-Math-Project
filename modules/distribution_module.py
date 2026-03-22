@@ -20,19 +20,29 @@ class DistributionModule:
         return binom.cdf(k, n, p)
 
     @staticmethod
-    def binomial_p_value(k, n, p, test_type="two-tail"):
+    def binomial_p_value(n, p, test_type, k1, k2=None):
         """Calculates the p-value for a binomial test."""
-        if test_type == "equal":
-            # Just the probability of exactly k
-            return binom.pmf(k, n, p)
-        elif test_type == "left-tail":
-            return binom.cdf(k, n, p)
+        # Convert to appropriate types
+        n = int(n)
+        p = float(p)
+        k1 = int(k1)
+
+        if test_type == "left-tail":
+            return binom.cdf(k1, n, p)
+        
         elif test_type == "right-tail":
-            # P(X >= k) = 1 - P(X <= k-1)
-            return 1 - binom.cdf(k - 1, n, p)
-        else:
-            # Two-tail: Sum probabilities of all outcomes as likely or less likely than observed
-            obs_prob = binom.pmf(k, n, p)
+            # P(X >= k1) = 1 - P(X <= k1-1)
+            return 1 - binom.cdf(k1 - 1, n, p)
+        
+        elif test_type == "middle":
+            if k2 is None: return 0
+            k2 = int(k2)
+            # P(k1 <= X <= k2) = P(X <= k2) - P(X <= k1-1)
+            return binom.cdf(k2, n, p) - binom.cdf(k1 - 1, n, p)
+        
+        else: # two-tail
+            # Sum probabilities of all outcomes as likely or less likely than observed k1
+            obs_prob = binom.pmf(k1, n, p)
             x = np.arange(0, n + 1)
             probs = binom.pmf(x, n, p)
             return np.sum(probs[probs <= obs_prob + 1e-9])
@@ -49,15 +59,26 @@ class DistributionModule:
         return norm.cdf(x, mu, sigma)
 
     @staticmethod
-    def normal_p_value(x, mu, sigma, test_type="two-tail"):
-        """Calculates the p-value for a normal distribution test."""
-        prob_left = norm.cdf(x, mu, sigma)
-        
+    def normal_p_value(mu, sigma, test_type, k1, k2=None):
+        """Calculates the p-value/area for normal distribution."""
+        mu = float(mu)
+        sigma = float(sigma)
+        k1 = float(k1)
+
         if test_type == "left-tail":
-            return prob_left
+            return norm.cdf(k1, mu, sigma)
+        
         elif test_type == "right-tail":
-            return 1 - prob_left
-        else:  # two-tail
+            return 1 - norm.cdf(k1, mu, sigma)
+        
+        elif test_type == "middle":
+            if k2 is None: return 0
+            k2 = float(k2)
+            # This gives you the 0.1359 result for P(10 <= X <= 20)
+            return norm.cdf(k2, mu, sigma) - norm.cdf(k1, mu, sigma)
+        
+        else: # two-tail
+            prob_left = norm.cdf(k1, mu, sigma)
             # Symmetry: 2 * the smaller of the two tail areas
             return 2 * min(prob_left, 1 - prob_left)
 
